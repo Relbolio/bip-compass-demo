@@ -1,0 +1,437 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+datasource db {
+//  provider = "mysql"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // relationMode = "foreignKeys"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+enum Role {
+  AGENCY_OWNER
+  AGENCY_ADMIN
+  SUBACCOUNT_USER
+  SUBACCOUNT_GUEST
+}
+
+
+model User {
+  id           String         @id @default(uuid())
+  name         String
+  avatarUrl    String?         @db.Text
+  email        String         @unique
+  emailVerified DateTime?
+  password      String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  role         Role           @default(SUBACCOUNT_USER)
+  agencyId     String?
+  Agency       Agency?        @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  Permissions  Permissions[]
+  // Ticket       Ticket[]
+  Notification Notification[]
+
+  @@index([agencyId])
+}
+
+model VerificationToken {
+  id String @id @default(uuid())
+  email String
+  token String @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id String @id @default(uuid())
+  email String
+  token String @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model Permissions {
+  id           String     @id @default(uuid())
+  email        String
+  User         User       @relation(fields: [email], references: [email], onDelete: Cascade)
+  subAccountId String
+  SubAccount   SubAccount @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+  access       Boolean
+
+  @@index([subAccountId])
+  @@index([email])
+}
+
+model Agency {
+  id               String                @id @default(uuid())
+  connectAccountId String?               @default("")
+  customerId       String                @default("")
+  name             String
+  agencyLogo       String                @db.Text
+  companyEmail     String                @db.Text
+  companyPhone     String
+  whiteLabel       Boolean               @default(true)
+  address          String
+  city             String
+  zipCode          String
+  state            String
+  country          String
+  goal             Int                   @default(5)
+  users            User[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  SubAccount       SubAccount[]
+  // SidebarOption    AgencySidebarOption[]
+  Invitation       Invitation[]
+  Notification     Notification[]
+  Subscription     Subscription?
+  categories      Category[]
+  products         Product[]
+  sizes           Size[]    
+  colors          Color[]
+  volumes          Volume[]
+  // AddOns           AddOns[]
+}
+
+model SubAccount {
+  id               String                    @id @default(uuid())
+  connectAccountId String?                   @default("")
+  name             String
+  subAccountLogo   String                    @db.Text
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  companyEmail     String                    @db.Text
+  companyPhone     String
+  goal             Int                       @default(5)
+  address          String
+  city             String
+  zipCode          String
+  state            String
+  country          String
+  agencyId         String
+  Agency           Agency                    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  // SidebarOption    SubAccountSidebarOption[]
+  Permissions      Permissions[]
+  // Funnels          Funnel[]
+  // Media            Media[]
+  Contacts          Contact[]
+  // Trigger          Trigger[]
+  // Automation       Automation[]
+  // Pipeline         Pipeline[]
+  // Tags             Tag[]
+  Notification     Notification[]
+  productDetails        ProductDetail[]
+  stockMovementsFrom StockMovement[] @relation("fromSubAccount")
+  stockMovementsTo   StockMovement[] @relation("toSubAccount")
+  ordersPlaced       Order[] @relation("PlacedOrders")
+  ordersReceived     Order[] @relation("ReceivedOrders")
+
+  @@index([agencyId])
+}
+
+enum InvitationStatus {
+  ACCEPTED
+  REVOKED
+  PENDING
+}
+
+model Invitation {
+  id       String           @id @default(uuid())
+  email    String           @unique
+  agencyId String
+  Agency   Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  status   InvitationStatus @default(PENDING)
+  role     Role             @default(SUBACCOUNT_USER)
+
+  @@index([agencyId])
+}
+
+model Notification {
+  id           String  @id @default(uuid())
+  notification String
+  agencyId     String
+  subAccountId String?
+  userId       String
+
+  User       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Agency     Agency      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  SubAccount SubAccount? @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([agencyId])
+  @@index([subAccountId])
+  @@index([userId])
+}
+
+
+enum ProductType {
+  VARIANT
+  COMPOSITE
+  SIMPLE
+}
+
+model Product {
+  id        String       @id @default(uuid())
+  productName String
+  description String?
+  sku String?  @unique
+  productType ProductType
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  categoryId  String    // Foreign Key to Category
+  category    Category  @relation( fields: [categoryId], references: [id], onDelete: Cascade)
+  productVariants  ProductVariant[]
+  productDetails        ProductDetail[]
+  agencyId     String   
+  agency       Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  compositeComponents CompositeProduct[] @relation("Component")
+  compositeParents    CompositeProduct[] @relation("Parent")
+  stockMovements StockMovement[] 
+  orderItems         OrderItem[]
+
+  @@index([agencyId])
+  @@index([categoryId])
+
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  agencyId     String   // Foreign Key to Store
+  agency       Agency    @relation(fields: [agencyId], references: [id])
+  name        String
+  products    Product[] // Relation to Product model
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([agencyId])
+}
+
+model Size {
+  id          String    @id @default(uuid())
+  agencyId     String    // Foreign Key to Store
+  agency       Agency     @relation(fields: [agencyId], references: [id])
+  name        String
+  value       String
+  productVariants    ProductVariant[] // Relation to Product model
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([agencyId])
+}
+
+model Volume {
+  id          String    @id @default(uuid())
+  agencyId     String    // Foreign Key to Store
+  agency       Agency     @relation(fields: [agencyId], references: [id])
+  name        String
+  value       String
+  productVariants    ProductVariant[] // Relation to Product model
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([agencyId])
+}
+
+model Color {
+  id          String   @id @default(uuid())
+  agencyId     String   // Foreign Key to Store
+  agency       Agency    @relation(fields: [agencyId], references: [id])
+  name        String
+  value       String
+  productVariants    ProductVariant[] // Relation to Product model
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([agencyId])
+}
+
+model ProductVariant {
+  id         String       @id @default(uuid())
+  productId  String
+  description String?
+  sku String  @unique
+  price      Float
+  quantity   Int
+  product    Product   @relation(fields: [productId], references: [id])
+  productDetails ProductDetail[]
+  stockMovements StockMovement[] 
+  sizeId      String?   // Foreign Key to Size
+  size        Size?      @relation(fields: [sizeId], references: [id])
+  colorId     String?   // Foreign Key to Color
+  color       Color?     @relation(fields: [colorId], references: [id])
+  volumeId     String?    // Foreign Key to Color
+  volume       Volume?     @relation(fields: [volumeId], references: [id])
+  orderItems         OrderItem[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@index([productId])
+   @@index([sizeId])
+  @@index([colorId])
+  @@index([volumeId])
+
+}
+
+model ProductDetail {
+  id              String       @id @default(uuid())
+  subAccountId        String
+  productId       String?
+  productVariantId String?
+  price           Float
+  quantity        Int
+  subAccount         SubAccount    @relation(fields: [subAccountId], references: [id])
+  product         Product?  @relation(fields: [productId], references: [id])
+  productVariant  ProductVariant? @relation(fields: [productVariantId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([subAccountId, productId, productVariantId])
+ @@index([productVariantId])
+  @@index([subAccountId])
+  @@index([productId])
+}
+
+model CompositeProduct {
+  id                 String      @id @default(uuid())
+  parentProductId    String
+  componentProductId String
+  quantity           Int
+  parentProduct      Product  @relation("Parent", fields: [parentProductId], references: [id])
+  componentProduct   Product  @relation("Component", fields: [componentProductId], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+   @@index([parentProductId])
+  @@index([componentProductId])
+}
+
+model StockMovement {
+  id              String       @id @default(uuid())
+  productVariantId String?
+  productId       String?
+  fromSubAccountId    String?
+  toSubAccountId      String?
+  quantity        Int
+  movementType    String
+  movementDate    DateTime
+  clientId        String?
+  productVariant  ProductVariant? @relation(fields: [productVariantId], references: [id])
+  product         Product?   @relation(fields: [productId], references: [id])
+  fromSubAccount     SubAccount?    @relation("fromSubAccount", fields: [fromSubAccountId], references: [id])
+  toSubAccount        SubAccount?    @relation("toSubAccount", fields: [toSubAccountId], references: [id])
+  client          Contact?    @relation(fields: [clientId], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([productVariantId])
+  @@index([productId])
+  @@index([fromSubAccountId])
+  @@index([toSubAccountId])
+  @@index([clientId])
+
+}
+
+enum Plan {
+  price_1OYxkqFj9oKEERu1NbKUxXxN
+  price_1OYxkqFj9oKEERu1KfJGWxgN
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  plan      Plan?
+  price     String?
+  active    Boolean  @default(false)
+
+  priceId              String
+  customerId           String
+  currentPeriodEndDate DateTime
+  subscriptionId     String   @unique
+
+  agencyId String? @unique
+  Agency   Agency? @relation(fields: [agencyId], references: [id])
+
+  @@index([customerId])
+}
+
+enum ContactType {
+  CLIENT
+  SUPPLIER
+}
+
+model Contact {
+  id           String   @id @default(uuid())
+  name         String
+  contactType ContactType
+  email        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  subAccountId String
+  stockMovements StockMovement[]
+  orders Order[]
+
+  Subaccount SubAccount @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+
+  @@index([subAccountId])
+}
+
+enum OrderType {
+  TRANSFER
+  DELIVERY
+  SALE
+  RETURN
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELED
+}
+
+model Order {
+  id                String        @id @default(uuid())
+  orderType         OrderType
+  status            OrderStatus   @default(PENDING)
+  fromSubAccountId  String?
+  toSubAccountId    String?
+  clientId          String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  fromSubAccount    SubAccount?   @relation("PlacedOrders", fields: [fromSubAccountId], references: [id])
+  toSubAccount      SubAccount?   @relation("ReceivedOrders", fields: [toSubAccountId], references: [id])
+  client            Contact?      @relation(fields: [clientId], references: [id])
+  orderItems        OrderItem[]
+
+  @@index([fromSubAccountId])
+  @@index([toSubAccountId])
+  @@index([clientId])
+}
+
+model OrderItem {
+  id                String         @id @default(uuid())
+  orderId           String
+  productId         String?
+  productVariantId  String?
+  quantity          Int
+  price             Float
+  order             Order          @relation(fields: [orderId], references: [id])
+  product           Product?       @relation(fields: [productId], references: [id])
+  productVariant    ProductVariant? @relation(fields: [productVariantId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([productVariantId])
+}
