@@ -6,6 +6,7 @@ import { currentUser } from "@/lib/auth";
 import { columns } from "./_components/columns";
 import DataTableGeneral from "@/components/data-table-general";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PageHeader from "@/components/page-header";
 
 type Props = {
   params: { agencyId: string };
@@ -38,27 +39,22 @@ const TeamPage = async ({ params }: Props) => {
   if (!agencyDetails) return;
 
   return (
-    <Card className="border-none drop-shadow-sm w-full">
-      <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
-        <CardTitle className="text-2xl line-clamp-1 uppercase">Team</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <DataTableGeneral
-          actionButtonText={
-            <>
-              <PlusCircle size={15} />
-              Add a member
-            </>
-          }
-          filterValue="name"
-          columns={columns}
-          data={teamMembers}
-          agency={agencyDetails}
-          modalType="createTeamMember"
-          modalData={{ agency: agencyDetails }}
-        ></DataTableGeneral>
-      </CardContent>
-    </Card>
+    <PageHeader title="Team">
+      <DataTableGeneral
+        actionButtonText={
+          <>
+            <PlusCircle size={15} />
+            Add a member
+          </>
+        }
+        filterValue="name"
+        columns={columns}
+        data={teamMembers}
+        agency={agencyDetails}
+        modalType="createTeamMember"
+        modalData={{ agency: agencyDetails }}
+      ></DataTableGeneral>
+    </PageHeader>
   );
 };
 

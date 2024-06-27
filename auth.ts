@@ -32,6 +32,8 @@ export const {
 
       const existingUser = await getUserById(user.id!);
 
+      console.log("im in session", existingUser);
+
       // Prevent sign in without email verification
       if (!existingUser?.emailVerified) return false;
 
@@ -54,7 +56,7 @@ export const {
         session.user.name = token.name as string;
         session.user.email = token.email as string;
         // session.user.emailVerified = token.emailVerified! as Date
-        session.user.avatarUrl = token.avatarUrl as string;
+        // session.user.avatarUrl = token.avatarUrl as string;
         session.user.id = token.id as string;
       }
 
@@ -70,7 +72,7 @@ export const {
       token.name = existingUser.name;
       token.email = existingUser.email;
       token.role = existingUser.role;
-      token.avatarUrl = existingUser.avatarUrl;
+      // token.avatarUrl = existingUser.avatarUrl;
       token.id = existingUser.id;
       // token.emailVerified = existingUser.emailVerified
 

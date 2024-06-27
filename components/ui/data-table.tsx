@@ -35,17 +35,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModalData, ModalType, useModal } from "@/hooks/use-modal-store";
+import { useRouter } from "next/navigation";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   filterValue: string;
+  actionButtonText?: React.ReactNode;
+  modalType?: ModalType;
+  modalData?: ModalData;
+  href?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   filterValue,
+  actionButtonText,
+  modalType,
+  modalData,
+  href,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -54,6 +64,9 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const { onOpen } = useModal();
+
+  const router = useRouter();
 
   const table = useReactTable({
     data,
@@ -76,7 +89,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex items-center justify-between py-4">
         <Input
           placeholder={`Filter ${filterValue}...`}
           value={
@@ -88,6 +101,24 @@ export function DataTable<TData, TValue>({
           className="max-w-sm"
         />
 
+        {actionButtonText && (
+          <Button
+            className="flex gap-2 ml-auto"
+            onClick={() => {
+              if (modalType && modalData) {
+                onOpen(modalType, {
+                  ...modalData,
+                });
+              }
+              if (href) {
+                router.push(href);
+              }
+            }}
+          >
+            {actionButtonText}
+          </Button>
+        )}
+
         {table.getFilteredSelectedRowModel().rows.length > 0 && (
           <Button
             size="sm"
@@ -98,7 +129,7 @@ export function DataTable<TData, TValue>({
             Delete ({table.getFilteredSelectedRowModel().rows.length})
           </Button>
         )}
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
               Columns <ChevronDown className="ml-2 h-4 w-4" />
@@ -123,7 +154,7 @@ export function DataTable<TData, TValue>({
                 );
               })}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
       <div className="rounded-md border">
         <Table>

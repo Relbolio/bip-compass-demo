@@ -1,4 +1,12 @@
-import { Notification, Prisma, Role } from "@prisma/client";
+import {
+  Category,
+  Color,
+  Notification,
+  Prisma,
+  Role,
+  Size,
+  Volume,
+} from "@prisma/client";
 import { getAuthUserDetails, getUserPermissions } from "./queries";
 import { db } from "@/lib/db";
 
@@ -39,3 +47,5 @@ export type UsersWithAgencySubAccountPermissionsSidebarOptions =
   Prisma.PromiseReturnType<
     typeof __getUsersWithAgencySubAccountPermissionsSidebarOptions
   >;
+
+export type ProductCategoriesSizeColorVolume = Size | Volume | Category | Color;

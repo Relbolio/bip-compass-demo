@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 const testimonials = [
   {
@@ -46,6 +47,8 @@ const testimonials = [
 ];
 
 export const LandingContent = () => {
+  const currentUser = useCurrentUser();
+
   return (
     <div className="px-10 pb-20">
       <h2 className="text-center text-4xl text-white font-extrabold mb-10">

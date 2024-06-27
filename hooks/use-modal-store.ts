@@ -12,7 +12,8 @@ export type ModalType =
   | "createCategory"
   | "createVariantTypes"
   | "deleteVariantTypes"
-  | "deleteCategory";
+  | "deleteCategory"
+  | "createProduct";
 
 export interface ModalData {
   agency?: Partial<Agency>;

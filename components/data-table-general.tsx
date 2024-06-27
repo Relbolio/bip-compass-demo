@@ -49,8 +49,8 @@ export default function DataTableGeneral<TData, TValue>({
   });
   return (
     <>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center py-4 gap-2">
+      <div className="md:flex items-center justify-between md:gap-y-2">
+        <div className="flex items-center py-2 gap-2">
           <Search />
           <Input
             placeholder="Search Name..."
@@ -63,18 +63,20 @@ export default function DataTableGeneral<TData, TValue>({
             className="h-12"
           />
         </div>
-        <Button
-          className="flex gap-2"
-          onClick={() => {
-            if (modalType && modalData) {
-              onOpen(modalType, {
-                ...modalData,
-              });
-            }
-          }}
-        >
-          {actionButtonText}
-        </Button>
+        <div className="flex items-center justify-center py-2">
+          <Button
+            className="flex gap-2"
+            onClick={() => {
+              if (modalType && modalData) {
+                onOpen(modalType, {
+                  ...modalData,
+                });
+              }
+            }}
+          >
+            {actionButtonText}
+          </Button>
+        </div>
       </div>
       <div className="border bg-background rounded-lg">
         <Table>

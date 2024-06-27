@@ -26,12 +26,12 @@ export const LandingNavbar = () => {
         </h1>
       </Link>
       <div className="flex items-center gap-x-2">
-        <Link href={currentUser ? "/agency" : "/auth/register"}>
+        <Link href={currentUser ? "/agency" : "/auth/login"}>
           <Button variant="outline" className="rounded-full">
-            Get Started
+            {currentUser ? "Get Started" : "Login"}
           </Button>
         </Link>
-        <UserMenu />
+        {currentUser && <UserMenu />}
       </div>
     </nav>
   );
